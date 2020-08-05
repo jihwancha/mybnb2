@@ -412,6 +412,26 @@ kubectl label namespace mybnb istio-injection=enabled
 * 숙소등록 부하 발생 (siege 에서) - 동시사용자 10명, 60초 동안 실시
 ```
 $ siege -v -c10 -t60S -r10 --content-type "application/json" 'http://room:8080/rooms POST {"name":"호텔4", "price":1000, "address":"서울", "host":"Superman"}'
+
+(처리결과)
+HTTP/1.1 500     0.08 secs:     247 bytes ==> POST http://room:8080/rooms
+HTTP/1.1 500     0.11 secs:     247 bytes ==> POST http://room:8080/rooms
+HTTP/1.1 500     0.08 secs:     247 bytes ==> POST http://room:8080/rooms
+HTTP/1.1 500     0.06 secs:     247 bytes ==> POST http://room:8080/rooms
+...
+
+Transactions:                    634 hits
+Availability:                  38.03 %
+Elapsed time:                  21.48 secs
+Data transferred:               0.39 MB
+Response time:                  0.34 secs
+Transaction rate:              29.52 trans/sec
+Throughput:                     0.02 MB/sec
+Concurrency:                    9.96
+Successful transactions:         634
+Failed transactions:            1033
+Longest transaction:            0.54
+Shortest transaction:           0.01
 ```
 
 * 서킷 브레이킹을 위한 DestinationRule 적용
@@ -420,12 +440,30 @@ $ cd ~/jihwancha/mybnb2/yaml
 $ kubectl apply -f dr-auth.yaml
 ```
 
+* 서킷 브레이킹 확인 (siege 에서)
+```
+HTTP/1.1 500     0.08 secs:     247 bytes ==> POST http://room:8080/rooms
+HTTP/1.1 500     0.11 secs:     247 bytes ==> POST http://room:8080/rooms
+HTTP/1.1 500     0.08 secs:     247 bytes ==> POST http://room:8080/rooms
+HTTP/1.1 500     0.06 secs:     247 bytes ==> POST http://room:8080/rooms
+...
+
+Transactions:                    634 hits
+Availability:                  38.03 %
+Elapsed time:                  21.48 secs
+Data transferred:               0.39 MB
+Response time:                  0.34 secs
+Transaction rate:              29.52 trans/sec
+Throughput:                     0.02 MB/sec
+Concurrency:                    9.96
+Successful transactions:         634
+Failed transactions:            1033
+Longest transaction:            0.54
+Shortest transaction:           0.01
+```
+
 * 서킷 브레이킹 확인 (kiali 화면)
 
-* 숙소등록 부하 발생 (siege 에서) - 동시사용자 10명, 60초 동안 실시
-```
-$ siege -v -c10 -t60S -r10 --content-type "application/json" 'http://room:8080/rooms POST {"name":"호텔5", "price":1000, "address":"서울", "host":"Superman"}'
-```
 
 * 서킷 브레이킹을 위한 DestinationRule 제거
 ```
@@ -433,7 +471,28 @@ $ cd ~/jihwancha/mybnb2/yaml
 $ kubectl delete -f dr-auth.yaml
 ```
 
-* 정상 동작 확인
+* 숙소등록 부하 발생 (siege 에서) - 동시사용자 10명, 60초 동안 실시
+```
+$ siege -v -c10 -t60S -r10 --content-type "application/json" 'http://room:8080/rooms POST {"name":"호텔5", "price":1000, "address":"서울", "host":"Superman"}'
+```
+
+* 정상 동작 확인 (siege 에서)
+```
+...
+
+Transactions:                   5306 hits
+Availability:                 100.00 %                <=================
+Elapsed time:                  59.05 secs
+Data transferred:               1.22 MB
+Response time:                  0.11 secs
+Transaction rate:              89.86 trans/sec
+Throughput:                     0.02 MB/sec
+Concurrency:                    9.93
+Successful transactions:        5306
+Failed transactions:               0
+Longest transaction:            0.48
+Shortest transaction:           0.01
+```
 
 
 # 검증4) 오토스케일 아웃
@@ -450,7 +509,34 @@ $ kubectl get deploy auth -n mybnb -w
 $ siege -v -c10 -t180S -r10 --content-type "application/json" 'http://room:8080/rooms POST {"name":"호텔6", "price":1000, "address":"서울", "host":"Superman"}'
 ```
 
+* 정상 동작 확인 (siege 에서)
+```
+...
+Transactions:                  20932 hits
+Availability:                 100.00 %             <==========================
+Elapsed time:                 179.13 secs
+Data transferred:               4.87 MB
+Response time:                  0.08 secs
+Transaction rate:             116.85 trans/sec
+Throughput:                     0.03 MB/sec
+Concurrency:                    9.77
+Successful transactions:       20932
+Failed transactions:               0
+Longest transaction:            3.69
+Shortest transaction:           0.00
+```
+
 * 스케일 아웃 확인
+```
+NAME   READY   UP-TO-DATE   AVAILABLE   AGE
+auth   1/1     1            1           15m
+auth   1/3     1            1           16m
+auth   1/3     1            1           16m
+auth   1/3     1            1           16m
+auth   1/3     3            1           16m
+auth   2/3     3            2           18m
+auth   3/3     3            3           18m
+```
 
 
 # 검증5) 무정지 재배포
@@ -462,11 +548,40 @@ siege -v -c1 -t300S -r10 --content-type "application/json" 'http://review:8080/r
 
 * 리뷰 이미지 update (readness, liveness 미설정 상태)
 ```
-$ kubectl apply -f review_na.yaml 실행
+$ kubectl apply -f review_na.yaml
+
+(POD 상태)
+NAME                       READY   STATUS        RESTARTS   AGE
+alarm-77cd9d57-96r4k       2/2     Running       0          13m
+auth-5d4c8cd986-7v4v8      2/2     Running       0          20m
+auth-5d4c8cd986-9vtht      2/2     Running       0          3m33s
+auth-5d4c8cd986-lmdp2      2/2     Running       0          3m33s
+booking-7ffd5f9d75-lwhq8   2/2     Running       0          99m
+gateway-7885fb4994-whvw8   2/2     Running       0          100m
+html-6fbc78fb49-t7dd8      2/2     Running       0          100m
+mypage-595b95dbf5-x5xgt    2/2     Running       0          99m
+pay-6ddbb7d4dd-c847f       2/2     Running       0          99m
+review-69957988c6-4sdfd    2/2     Running       0          6s               <=============
+review-7cfb746cbb-682ks    2/2     Terminating   0          99m
+room-6448f765fc-jsbgr      2/2     Running       0          99m
+siege                      2/2     Running       0          100m
 ```
 
 * 에러 발생 확인 (siege 에서)
-
+```
+Transactions:                   4700 hits
+Availability:                  82.11 %              <=======================
+Elapsed time:                  31.22 secs
+Data transferred:               3.39 MB
+Response time:                  0.01 secs
+Transaction rate:             150.54 trans/sec
+Throughput:                     0.11 MB/sec
+Concurrency:                    0.96
+Successful transactions:        4700
+Failed transactions:            1024
+Longest transaction:            0.08
+Shortest transaction:           0.00
+```
 
 * 리뷰조회 부하 발생 (siege 에서) - 동시사용자 1명, 300초 동안 실시
 ```
@@ -475,10 +590,40 @@ siege -v -c1 -t300S -r10 --content-type "application/json" 'http://review:8080/r
 
 * 리뷰 이미지 update (readness, liveness 설정 상태)
 ```
-$ kubectl apply -f review.yaml 실행
+$ kubectl apply -f review.yaml
+
+(POD 상태)
+NAME                       READY   STATUS    RESTARTS   AGE
+alarm-77cd9d57-96r4k       2/2     Running   0          15m
+auth-5d4c8cd986-7v4v8      2/2     Running   0          22m
+auth-5d4c8cd986-9vtht      2/2     Running   0          5m15s
+auth-5d4c8cd986-lmdp2      2/2     Running   0          5m15s
+booking-7ffd5f9d75-lwhq8   2/2     Running   0          101m
+gateway-7885fb4994-whvw8   2/2     Running   0          101m
+html-6fbc78fb49-t7dd8      2/2     Running   0          101m
+mypage-595b95dbf5-x5xgt    2/2     Running   0          101m
+pay-6ddbb7d4dd-c847f       2/2     Running   0          101m
+review-69957988c6-4sdfd    2/2     Running   0          108s
+review-7cfb746cbb-ttv8s    1/2     Running   0          11s       <=========
+room-6448f765fc-jsbgr      2/2     Running   0          101m
+siege                      2/2     Running   0          102m
 ```
 
 * 정상 실행 확인 (siege 에서)
-
+```
+...
+Transactions:                  23586 hits
+Availability:                 100.00 %              <======================
+Elapsed time:                  98.46 secs
+Data transferred:               7.85 MB
+Response time:                  0.00 secs
+Transaction rate:             239.55 trans/sec
+Throughput:                     0.08 MB/sec
+Concurrency:                    0.96
+Successful transactions:       23586
+Failed transactions:               0
+Longest transaction:            0.72
+Shortest transaction:           0.00
+```
 
 
