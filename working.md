@@ -148,9 +148,7 @@ kubectl apply -f auth.yaml
 # 사전 검증
 
 * 화면
-```
-http://a2cd95eb5dfa547c290e7c877e07d62c-1371768300.ap-northeast-2.elb.amazonaws.com:8080/html/index.html
-```
+- http://a2cd95eb5dfa547c290e7c877e07d62c-1371768300.ap-northeast-2.elb.amazonaws.com:8080/html/index.html
 
 * siege 접속
 ```
@@ -193,23 +191,88 @@ http http://booking:8080/bookings/1
 * 인증 서비스 중지
 ```
 $ kubectl delete -f auth.yaml
+
+(POD 상태)
+NAME                           READY   STATUS    RESTARTS   AGE
+pod/alarm-77cd9d57-fj6dm       2/2     Running   0          78m
+pod/booking-7ffd5f9d75-lwhq8   2/2     Running   0          78m
+pod/gateway-7885fb4994-whvw8   2/2     Running   0          79m
+pod/html-6fbc78fb49-t7dd8      2/2     Running   0          78m
+pod/mypage-595b95dbf5-x5xgt    2/2     Running   0          78m
+pod/pay-6ddbb7d4dd-c847f       2/2     Running   0          78m
+pod/review-7cfb746cbb-682ks    2/2     Running   0          78m
+pod/room-6448f765fc-jsbgr      2/2     Running   0          78m
+pod/siege                      2/2     Running   0          79m
 ```
 
 * 숙소 등록 에러 확인 (siege 에서)
 ```
 http POST http://room:8080/rooms name=호텔1 price=1000 address=서울 host=Superman
 http POST http://room:8080/rooms name=펜션1 price=1000 address=양평 host=Superman
+
+(처리에러)
+HTTP/1.1 500 Internal Server Error
+content-type: application/json;charset=UTF-8
+date: Wed, 05 Aug 2020 12:33:03 GMT
+server: envoy
+transfer-encoding: chunked
+x-envoy-upstream-service-time: 10042
+
+{
+    "error": "Internal Server Error",
+    "message": "Could not commit JPA transaction; nested exception is javax.persistence.RollbackException: Error while committing the transaction",
+    "path": "/rooms",
+    "status": 500,
+    "timestamp": "2020-08-05T12:33:03.761+0000"
+}
 ```
 
 * 인증 서비스 기동
 ```
 $ kubectl apply -f auth.yaml
+
+(POD 상태)
+NAME                       READY   STATUS    RESTARTS   AGE
+alarm-77cd9d57-fj6dm       2/2     Running   0          80m
+auth-5d4c8cd986-7v4v8      2/2     Running   0          83s       <===
+booking-7ffd5f9d75-lwhq8   2/2     Running   0          80m
+gateway-7885fb4994-whvw8   2/2     Running   0          81m
+html-6fbc78fb49-t7dd8      2/2     Running   0          81m
+mypage-595b95dbf5-x5xgt    2/2     Running   0          80m
+pay-6ddbb7d4dd-c847f       2/2     Running   0          80m
+review-7cfb746cbb-682ks    2/2     Running   0          80m
+room-6448f765fc-jsbgr      2/2     Running   0          80m
+siege                      2/2     Running   0          81m
 ```
 
 * 숙소 등록 성공 확인 (siege 에서)
 ```
 http POST http://room:8080/rooms name=호텔2 price=1000 address=서울 host=Superman
 http POST http://room:8080/rooms name=펜션2 price=1000 address=양평 host=Superman
+
+(처리)
+HTTP/1.1 201 Created
+content-type: application/json;charset=UTF-8
+date: Wed, 05 Aug 2020 12:36:58 GMT
+location: http://room:8080/rooms/10
+server: envoy
+transfer-encoding: chunked
+x-envoy-upstream-service-time: 57
+
+{
+    "_links": {
+        "room": {
+            "href": "http://room:8080/rooms/10"
+        },
+        "self": {
+            "href": "http://room:8080/rooms/10"
+        }
+    },
+    "address": "서울",
+    "host": "Superman",
+    "name": "호텔2",
+    "price": 1000
+}
 ```
 
 # 검증2) 비동기식 호출 / 시간적 디커플링 / 장애격리 / 최종 (Eventual) 일관성 테스트
@@ -219,27 +282,122 @@ http POST http://room:8080/rooms name=펜션2 price=1000 address=양평 host=Sup
 * 알림 서비스 중지
 ```
 kubectl delete -f alarm.yaml
+
+(POD 상태)
+NAME                       READY   STATUS        RESTARTS   AGE
+alarm-77cd9d57-fj6dm       2/2     Terminating   0          83m       <=====
+auth-5d4c8cd986-7v4v8      2/2     Running       0          4m13s
+booking-7ffd5f9d75-lwhq8   2/2     Running       0          83m
+gateway-7885fb4994-whvw8   2/2     Running       0          83m
+html-6fbc78fb49-t7dd8      2/2     Running       0          83m
+mypage-595b95dbf5-x5xgt    2/2     Running       0          83m
+pay-6ddbb7d4dd-c847f       2/2     Running       0          83m
+review-7cfb746cbb-682ks    2/2     Running       0          83m
+room-6448f765fc-jsbgr      2/2     Running       0          83m
+siege                      2/2     Running       0          84m
+```
+
+* 알림 이력 조회 불가 확인 (siege 에서)
+```
+http http://alarm:8080/alarms
+
+(처리에러)
+http: error: ConnectionError: HTTPConnectionPool(host='alarm', port=8080): Max retries exceeded with url: /alarms (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f7230913eb8>: Failed to establish a new connection: [Errno -2] Name or service not known')) while doing GET request to URL: http://alarm:8080/alarms
 ```
 
 * 숙소 등록 성공 확인 (siege 에서)
 ```
 http POST http://room:8080/rooms name=호텔3 price=1000 address=서울 host=Superman
 http POST http://room:8080/rooms name=펜션3 price=1000 address=양평 host=Superman
-```
 
-* 알림 이력 조회 불가 확인 (siege 에서)
-```
-http http://alarm:8080/alarms
+(처리성공)
+HTTP/1.1 201 Created
+content-type: application/json;charset=UTF-8
+date: Wed, 05 Aug 2020 12:39:25 GMT
+location: http://room:8080/rooms/11
+server: envoy
+transfer-encoding: chunked
+x-envoy-upstream-service-time: 54
+
+{
+    "_links": {
+        "room": {
+            "href": "http://room:8080/rooms/11"
+        },
+        "self": {
+            "href": "http://room:8080/rooms/11"
+        }
+    },
+    "address": "서울",
+    "host": "Superman",
+    "name": "호텔3",
+    "price": 1000
+}
 ```
 
 * 알림 서비스 기동
 ```
 kubectl apply -f alarm.yaml
+
+(POD 상태)
+NAME                       READY   STATUS    RESTARTS   AGE
+alarm-77cd9d57-96r4k       1/2     Running   0          5s          <==================
+auth-5d4c8cd986-7v4v8      2/2     Running   0          6m43s
+booking-7ffd5f9d75-lwhq8   2/2     Running   0          86m
+gateway-7885fb4994-whvw8   2/2     Running   0          86m
+html-6fbc78fb49-t7dd8      2/2     Running   0          86m
+mypage-595b95dbf5-x5xgt    2/2     Running   0          85m
+pay-6ddbb7d4dd-c847f       2/2     Running   0          86m
+review-7cfb746cbb-682ks    2/2     Running   0          85m
+room-6448f765fc-jsbgr      2/2     Running   0          86m
+siege                      2/2     Running   0          86m
 ```
 
 * 알림 이력 조회 성송 확인 (siege 에서)
 ```
 http http://alarm:8080/alarms 
+
+(처리성공)
+HTTP/1.1 200 OK
+content-type: application/hal+json;charset=UTF-8
+date: Wed, 05 Aug 2020 12:41:56 GMT
+server: envoy
+transfer-encoding: chunked
+x-envoy-upstream-service-time: 390
+
+{
+    "_embedded": {
+        "alarms": [
+            {
+                "_links": {
+                    "alarm": {
+                        "href": "http://alarm:8080/alarms/1"
+                    },
+                    "self": {
+                        "href": "http://alarm:8080/alarms/1"
+                    }
+                },
+                "message": "AuthApproved",
+                "receiver": "(host)Superman"
+            }
+        ]
+    },
+    "_links": {
+        "profile": {
+            "href": "http://alarm:8080/profile/alarms"
+        },
+        "self": {
+            "href": "http://alarm:8080/alarms{?page,size,sort}",
+            "templated": true
+        }
+    },
+    "page": {
+        "number": 0,
+        "size": 20,
+        "totalElements": 1,
+        "totalPages": 1
+    }
+}
 ```
 
 # 검증3) 동기식 호출 / 서킷 브레이킹 / 장애격리
