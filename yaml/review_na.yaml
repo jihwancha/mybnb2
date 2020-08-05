@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: auth
+  name: review
   namespace: mybnb
   labels:
-    app: auth
+    app: review
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: auth
+      app: review
   template:
     metadata:
       labels:
-        app: auth
+        app: review
     spec:
       containers:
-        - name: auth
-          image: 496278789073.dkr.ecr.ap-northeast-2.amazonaws.com/skccuser22-auth:latest
+        - name: review
+          image: 496278789073.dkr.ecr.ap-northeast-2.amazonaws.com/skccuser22-review:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -27,13 +27,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: auth
+  name: review
   namespace: mybnb
   labels:
-    app: auth
+    app: review
 spec:
   ports:
     - port: 8080
       targetPort: 8080
   selector:
-    app: auth
+    app: review
