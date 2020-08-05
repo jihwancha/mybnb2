@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: auth
-          image: 496278789073.dkr.ecr.ap-northeast-2.amazonaws.com/mybnb-auth:latest
+          image: 496278789073.dkr.ecr.ap-northeast-2.amazonaws.com/skccuser22-auth:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080

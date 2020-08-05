@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: review
-          image: 496278789073.dkr.ecr.ap-northeast-2.amazonaws.com/mybnb-review:latest
+          image: 496278789073.dkr.ecr.ap-northeast-2.amazonaws.com/skccuser22-review:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
