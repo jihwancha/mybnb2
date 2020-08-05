@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Mybnb.com (공유 숙소 서비스 따라하기)</title>
+    <link rel="stylesheet" href="./css/common.css">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    <script type="text/javascript">
+
+jQuery(document).ready(function(){
+
+    loadRoom();
+
+    $("#btnClose").click(function() {
+        window.close();
+    });
+
+    $("#btnBook").click(function() {
+        addBook();
+    });
+
+    function loadRoom() {
+        var roomId = location.href.substr(
+            location.href.lastIndexOf('?') + 1
+        );
+        //alert("room id:" + roomId);
+
+        $.ajax({
+            type: "GET",
+            contentType: "application/json",
+            dataType: 'json',
+            url: "/rooms/" + roomId,
+            //data: JSON.stringify(data),
+            success: function(result){
+                console.log(result);
+
+                $("#roomId").val(roomId);
+                $("#name").val(result.name);
+                $("#price").val(result.price);
+                $("#address").val(result.address);
+                $("#host").val(result.host);
+            },
+
+            error: function (status) {
+                alert("숙소 정보 조회 실패. " + status);
+                window.close();
+             }
+        });
+    }
+
+    function addBook() {
+        var data = {};
+
+        data['roomId']   = $("#roomId").val();
+        data['name']     = $("#name").val();
+        data['price']    = $("#price").val();
+        data['address']  = $("#address").val();
+        data['host']     = $("#host").val();
+        data['guest']    = $("#guest").val();
+        data['usedate']  = $("#usedate").val();
+
+        $.ajax({
+            type: "POST",
+            contentType: "application/json",
+            dataType: 'json',
+            url: "/bookings",
+            data: JSON.stringify(data),
+            success: function(result){
+                console.log(result);
+
+                alert("예약 완료");
+                window.opener.location.reload();
+                window.close();
+            },
+
+            error: function (status) {
+                //alert('fail' + status);
+                alert("예약 실패");
+                window.opener.location.reload();
+                window.close();
+             }
+        });
+    }
+
+});
+    </script>
+
+</head>
+<body>
+
+<div class="popup-wrap">
+    <div class="contents-area">
+        <h2 class="title">숙소 예약하기</h2>
+        <div class="title-line"></div>
+
+        <table class="Table">
+            <tbody>
+                <tr>
+                    <th>ID</th>
+                    <td><input class="Textinput" type="text" id="roomId" readonly></td>
+                </tr>
+                <tr>
+                    <th>이름</th>
+                    <td><input class="Textinput" type="text" id="name" readonly></td>
+                </tr>
+                <tr>
+                    <th>가격</th>
+                    <td><input class="Textinput" type="text" id="price" readonly></td>
+                </tr>
+                <tr>
+                    <th>주소</th>
+                    <td><input class="Textinput" type="text" id="address" readonly></td>
+                </tr>
+                <tr>
+                    <th>호스트</th>
+                    <td><input class="Textinput" type="text" id="host" readonly></td>
+                </tr>
+                <tr>
+                    <th>예약자</th>
+                    <td><input class="Textinput" type="text" id="guest"></td>
+                </tr>
+                <tr>
+                    <th>사용일자</th>
+                    <td><input class="Textinput" type="text" id="usedate"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="btn-wrap">
+            <div class="btn-left">
+            </div>
+            <div class="btn-right">
+                <button class="Button bg-red" id="btnBook">예약</button>
+                <button class="Button bg-gray" id="btnClose">취소</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>
+

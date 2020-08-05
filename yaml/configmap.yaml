@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mybnb-config
+  namespace: mybnb
+data:
+  api.url.payment: http://pay:8080
+  api.url.auth: http://auth:8080
+  alarm.prefix: Hello

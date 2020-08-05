@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth
+  namespace: mybnb
+  labels:
+    app: auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth
+  template:
+    metadata:
+      labels:
+        app: auth
+    spec:
+      containers:
+        - name: auth
+          image: 496278789073.dkr.ecr.ap-northeast-2.amazonaws.com/mybnb-auth:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth
+  namespace: mybnb
+  labels:
+    app: auth
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: auth
