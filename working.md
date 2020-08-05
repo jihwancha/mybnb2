@@ -1,3 +1,15 @@
+# 시나리오
+    * 숙소 등록시 인증을 성공해야 완료 처리된다.
+    * 인증 이력을 조회할 수 있다.
+    * 숙소 예약 건은 리뷰를 작성할 수 있다.
+    * 리뷰 이력을 조회할 수 있다.
+    * 리뷰 평점을 마이페이지에서 조회할 수 있다.
+
+# 모델링
+http://msaez.io/#/storming/TWDBQXDzOJbymFE78o3DdlQ90XG3/mine/681114567eb432a08615fd100d1792a3/-MDyouJpE0WQz4sxCjdA
+![슬라이드3](https://user-images.githubusercontent.com/61722732/89420138-41965600-d76d-11ea-9c7b-9bfb26bfc642.JPG)
+
+
 # 환경구성
 
 * EKS Cluster create
