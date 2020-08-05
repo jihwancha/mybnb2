@@ -49,9 +49,10 @@ $ kubectl get pod -n istio-system
 * Kiali 설정
 ```
 $ kubectl edit service/kiali -n istio-system
+
+- type 변경 : ClusterIP -> LoadBalancer
+- (접속주소) http://aaa1acc40ce7e4255b8ce9098a68f927-1757157123.ap-northeast-2.elb.amazonaws.com:20001
 ```
-* type 변경 : ClusterIP -> LoadBalancer
-* (접속주소) http://aaa1acc40ce7e4255b8ce9098a68f927-1757157123.ap-northeast-2.elb.amazonaws.com:20001
 
 * Namespace 생성
 ```
@@ -61,8 +62,9 @@ $ kubectl create namespace mybnb
 * Namespace istio enabled
 ```
 $ kubectl label namespace mybnb istio-injection=enabled 
-```
+
 - (설정해제 : kubectl label namespace mybnb istio-injection=disabled --overwrite)
+```
 
 # Build & Deploy
 
