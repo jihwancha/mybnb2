@@ -1,6 +1,6 @@
 # 환경구성
 
-* EKS Cluster create
+## EKS Cluster create
 <pre>
 $ eksctl create cluster --name skccuser22-cluster --version 1.15 --nodegroup-name standard-workers --node-type t3.medium --nodes 3 --nodes-min 1 --nodes-max 4
 </pre>
@@ -23,7 +23,7 @@ $ kubectl get deployment metrics-server -n kube-system
 </pre>
 
 * Kafka install (kubernetes/helm)
-<pre>1
+<pre>
 $ curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | bash
 $ kubectl --namespace kube-system create sa tiller      
 $ kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
