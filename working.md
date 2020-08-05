@@ -150,8 +150,10 @@ kubectl apply -f auth.yaml
 * 화면
     - http://a2cd95eb5dfa547c290e7c877e07d62c-1371768300.ap-northeast-2.elb.amazonaws.com:8080/html/index.html
 
-![슬라이드1](https://user-images.githubusercontent.com/61722732/89418546-2c202c80-d76b-11ea-9b03-6611f1000ca3.JPG)
-![슬라이드2](https://user-images.githubusercontent.com/61722732/89418547-2cb8c300-d76b-11ea-918a-5b9cd83cb0a7.JPG)
+    - 동기호출
+        ![슬라이드1](https://user-images.githubusercontent.com/61722732/89418546-2c202c80-d76b-11ea-9b03-6611f1000ca3.JPG)
+    - 비동기 호출
+        ![슬라이드2](https://user-images.githubusercontent.com/61722732/89418547-2cb8c300-d76b-11ea-918a-5b9cd83cb0a7.JPG)
 
 * siege 접속
 ```
