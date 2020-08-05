@@ -1,29 +1,29 @@
 # 환경구성
 
-## EKS Cluster create
+* EKS Cluster create
 ```
 $ eksctl create cluster --name skccuser22-cluster --version 1.15 --nodegroup-name standard-workers --node-type t3.medium --nodes 3 --nodes-min 1 --nodes-max 4
 ```
 
-## EKS Cluster settings
+* EKS Cluster settings
 ```
 $ aws eks --region ap-northeast-2 update-kubeconfig --name skccuser22-cluster
 $ kubectl config current-context
 $ kubectl get all
 ```
 
-## ECR 인증
+* ECR 인증
 ```
 $ aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin 496278789073.dkr.ecr.ap-northeast-2.amazonaws.com
 ```
 
-## Metric Server 설치
+* Metric Server 설치
 ```
 $ kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.3.6/components.yaml
 $ kubectl get deployment metrics-server -n kube-system
 ```
 
-## Kafka install (kubernetes/helm)
+* Kafka install (kubernetes/helm)
 ```
 $ curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | bash
 $ kubectl --namespace kube-system create sa tiller      
@@ -36,7 +36,7 @@ $ helm install --name my-kafka --namespace kafka incubator/kafka
 $ kubectl get all -n kafka
 ```
 
-## Istio 설치
+* Istio 설치
 ```
 $ curl -L https://git.io/getLatestIstio | ISTIO_VERSION=1.4.5 sh -
 $ cd istio-1.4.5
@@ -46,19 +46,19 @@ $ kubectl apply -f install/kubernetes/istio-demo.yaml
 $ kubectl get pod -n istio-system
 ```
 
-## Kiali 설정
+* Kiali 설정
 ```
 $ kubectl edit service/kiali -n istio-system
 ```
 * type 변경 : ClusterIP -> LoadBalancer
 * (접속주소) http://aaa1acc40ce7e4255b8ce9098a68f927-1757157123.ap-northeast-2.elb.amazonaws.com:20001
 
-## Namespace 생성
+* Namespace 생성
 ```
 $ kubectl create namespace mybnb
 ```
 
-## Namespace istio enabled
+* Namespace istio enabled
 ```
 $ kubectl label namespace mybnb istio-injection=enabled 
 ```
@@ -66,7 +66,7 @@ $ kubectl label namespace mybnb istio-injection=enabled
 
 # Build & Deploy
 
-## ECR image repository
+* ECR image repository
 ```
 $ aws ecr create-repository --repository-name skccuser22-gateway --region ap-northeast-2
 $ aws ecr create-repository --repository-name skccuser22-html --region ap-northeast-2
@@ -79,7 +79,7 @@ $ aws ecr create-repository --repository-name skccuser22-alarm --region ap-north
 $ aws ecr create-repository --repository-name skccuser22-auth --region ap-northeast-2
 ```
 
-## image build & push
+* image build & push
 ```
 $ cd ~/jihwancha/mybnb2/gateway
 $ mvn clean package
@@ -127,7 +127,7 @@ $ docker build -t 496278789073.dkr.ecr.ap-northeast-2.amazonaws.com/skccuser22-a
 $ docker push 496278789073.dkr.ecr.ap-northeast-2.amazonaws.com/skccuser22-auth:latest
 ```
 
-## Deploy
+* Deploy
 ```
 $ cd ~/jihwancha/mybnb2/yaml
 kubectl apply -f siege.yaml
@@ -145,41 +145,41 @@ kubectl apply -f auth.yaml
 
 # 사전 검증
 
-## 화면
+* 화면
 ```
 http://a2cd95eb5dfa547c290e7c877e07d62c-1371768300.ap-northeast-2.elb.amazonaws.com:8080/html/index.html
 ```
 
-## siege 접속
+* siege 접속
 ```
 kubectl exec -it siege -n mybnb -- /bin/bash
 apt-get update
 apt-get install httpie
 ```
 
-## 숙소 등록 (siege 에서)
+* 숙소 등록 (siege 에서)
 ```
 http POST http://room:8080/rooms name=호텔 price=1000 address=서울 host=Superman
 http POST http://room:8080/rooms name=펜션 price=1000 address=양평 host=Superman
 http POST http://room:8080/rooms name=민박 price=1000 address=강릉 host=Superman
 ```
 
-## 숙소 확인 (siege 에서)
+* 숙소 확인 (siege 에서)
 ```
 http http://room:8080/rooms
 ```
 
-## 인증 확인 (siege 에서)
+* 인증 확인 (siege 에서)
 ```
 http http://auth:8080/auths
 ```
 
-## 예약 (siege 에서)
+* 예약 (siege 에서)
 ```
 http POST http://booking:8080/bookings roomId=1 name=호텔 price=1000 address=서울 host=Superman guest=배트맨 usedate=20201010
 ```
 
-## 예약 확인 (siege 에서)
+* 예약 확인 (siege 에서)
 ```
 http http://booking:8080/bookings/1
 ```
@@ -188,23 +188,23 @@ http http://booking:8080/bookings/1
 - 숙소 등록시 인증 서비스를 동기식으로 호출하고 있음.
 - 동기식 호출에서는 호출 시간에 따른 타임 커플링이 발생하며, 인증시스템이 장애가 나면 숙소 등록을 못받는다는 것을 확인
 
-## 인증 서비스 중지
+* 인증 서비스 중지
 ```
 $ kubectl delete -f auth.yaml
 ```
 
-## 숙소 등록 에러 확인 (siege 에서)
+* 숙소 등록 에러 확인 (siege 에서)
 ```
 http POST http://room:8080/rooms name=호텔1 price=1000 address=서울 host=Superman
 http POST http://room:8080/rooms name=펜션1 price=1000 address=양평 host=Superman
 ```
 
-## 인증 서비스 기동
+* 인증 서비스 기동
 ```
 $ kubectl apply -f auth.yaml
 ```
 
-## 숙소 등록 성공 확인 (siege 에서)
+* 숙소 등록 성공 확인 (siege 에서)
 ```
 http POST http://room:8080/rooms name=호텔2 price=1000 address=서울 host=Superman
 http POST http://room:8080/rooms name=펜션2 price=1000 address=양평 host=Superman
@@ -214,28 +214,28 @@ http POST http://room:8080/rooms name=펜션2 price=1000 address=양평 host=Sup
 
 - 숙소가 등록된 후에 알림 처리는 동기식이 아니라 비동기식으로 처리하여 알림 시스템의 처리를 위하여 등록 블로킹 되지 않아도록 처리한다.
 
-## 알림 서비스 중지
+* 알림 서비스 중지
 ```
 kubectl delete -f alarm.yaml
 ```
 
-## 숙소 등록 성공 확인 (siege 에서)
+* 숙소 등록 성공 확인 (siege 에서)
 ```
 http POST http://room:8080/rooms name=호텔3 price=1000 address=서울 host=Superman
 http POST http://room:8080/rooms name=펜션3 price=1000 address=양평 host=Superman
 ```
 
-## 알림 이력 조회 불가 확인 (siege 에서)
+* 알림 이력 조회 불가 확인 (siege 에서)
 ```
 http http://alarm:8080/alarms
 ```
 
-## 알림 서비스 기동
+* 알림 서비스 기동
 ```
 kubectl apply -f alarm.yaml
 ```
 
-## 알림 이력 조회 성송 확인 (siege 에서)
+* 알림 이력 조회 성송 확인 (siege 에서)
 ```
 http http://alarm:8080/alarms 
 ```
@@ -244,81 +244,81 @@ http http://alarm:8080/alarms
 - 서킷 브레이킹 프레임워크의 선택: istio-injection + DestinationRule
 - 숙소 등록시 동기로 호출되는 인증 서비스에 설정
 
-## istio-injection 적용 (기 적용완료)
+* istio-injection 적용 (기 적용완료)
 ```
 kubectl label namespace mybnb istio-injection=enabled
 ```
 
-## 숙소등록 부하 발생 (siege 에서) - 동시사용자 10명, 60초 동안 실시
+* 숙소등록 부하 발생 (siege 에서) - 동시사용자 10명, 60초 동안 실시
 ```
 $ siege -v -c10 -t60S -r10 --content-type "application/json" 'http://room:8080/rooms POST {"name":"호텔4", "price":1000, "address":"서울", "host":"Superman"}'
 ```
 
-## 서킷 브레이킹을 위한 DestinationRule 적용
+* 서킷 브레이킹을 위한 DestinationRule 적용
 ```
 $ cd ~/jihwancha/mybnb2/yaml
 $ kubectl apply -f dr-auth.yaml
 ```
 
-## 서킷 브레이킹 확인 (kiali 화면)
+* 서킷 브레이킹 확인 (kiali 화면)
 
-## 숙소등록 부하 발생 (siege 에서) - 동시사용자 10명, 60초 동안 실시
+* 숙소등록 부하 발생 (siege 에서) - 동시사용자 10명, 60초 동안 실시
 ```
 $ siege -v -c10 -t60S -r10 --content-type "application/json" 'http://room:8080/rooms POST {"name":"호텔5", "price":1000, "address":"서울", "host":"Superman"}'
 ```
 
-## 서킷 브레이킹을 위한 DestinationRule 제거
+* 서킷 브레이킹을 위한 DestinationRule 제거
 ```
 $ cd ~/jihwancha/mybnb2/yaml
 $ kubectl delete -f dr-auth.yaml
 ```
 
-## 정상 동작 확인
+* 정상 동작 확인
 
 
 # 검증4) 오토스케일 아웃
 - 인증 서비스에 대한 replica 를 동적으로 늘려주도록 HPA 를 설정한다. 설정은 CPU 사용량이 15프로를 넘어서면 replica 를 3개까지 늘려준다:
 
-## HPA 적용
+* HPA 적용
 ```
 $ kubectl autoscale deploy auth -n mybnb --min=1 --max=3 --cpu-percent=15
 $ kubectl get deploy auth -n mybnb -w 
 ```
 
-## 숙소등록 부하 발생 (siege 에서) - 동시사용자 10명, 180초 동안 실시
+* 숙소등록 부하 발생 (siege 에서) - 동시사용자 10명, 180초 동안 실시
 ```
 $ siege -v -c10 -t180S -r10 --content-type "application/json" 'http://room:8080/rooms POST {"name":"호텔6", "price":1000, "address":"서울", "host":"Superman"}'
 ```
 
-## 스케일 아웃 확인
+* 스케일 아웃 확인
 
 
 # 검증5) 무정지 재배포
 
-## 리뷰조회 부하 발생 (siege 에서) - 동시사용자 1명, 300초 동안 실시
+* 리뷰조회 부하 발생 (siege 에서) - 동시사용자 1명, 300초 동안 실시
 ```
 siege -v -c1 -t300S -r10 --content-type "application/json" 'http://review:8080/reviews'
 ```
 
-## 리뷰 이미지 update (readness, liveness 미설정 상태)
+* 리뷰 이미지 update (readness, liveness 미설정 상태)
 ```
 $ kubectl apply -f review_na.yaml 실행
 ```
 
-## 에러 발생 확인 (siege 에서)
+* 에러 발생 확인 (siege 에서)
 
 
-## 리뷰조회 부하 발생 (siege 에서) - 동시사용자 1명, 300초 동안 실시
+* 리뷰조회 부하 발생 (siege 에서) - 동시사용자 1명, 300초 동안 실시
 ```
 siege -v -c1 -t300S -r10 --content-type "application/json" 'http://review:8080/reviews'
 ```
 
-## 리뷰 이미지 update (readness, liveness 설정 상태)
+* 리뷰 이미지 update (readness, liveness 설정 상태)
 ```
 $ kubectl apply -f review.yaml 실행
 ```
 
-## 정상 실행 확인 (siege 에서)
+* 정상 실행 확인 (siege 에서)
 
 
 
