@@ -412,26 +412,6 @@ kubectl label namespace mybnb istio-injection=enabled
 * 숙소등록 부하 발생 (siege 에서) - 동시사용자 10명, 60초 동안 실시
 ```
 $ siege -v -c10 -t60S -r10 --content-type "application/json" 'http://room:8080/rooms POST {"name":"호텔4", "price":1000, "address":"서울", "host":"Superman"}'
-
-(처리결과)
-HTTP/1.1 500     0.08 secs:     247 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 500     0.11 secs:     247 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 500     0.08 secs:     247 bytes ==> POST http://room:8080/rooms
-HTTP/1.1 500     0.06 secs:     247 bytes ==> POST http://room:8080/rooms
-...
-
-Transactions:                    634 hits
-Availability:                  38.03 %
-Elapsed time:                  21.48 secs
-Data transferred:               0.39 MB
-Response time:                  0.34 secs
-Transaction rate:              29.52 trans/sec
-Throughput:                     0.02 MB/sec
-Concurrency:                    9.96
-Successful transactions:         634
-Failed transactions:            1033
-Longest transaction:            0.54
-Shortest transaction:           0.01
 ```
 
 * 서킷 브레이킹을 위한 DestinationRule 적용
@@ -463,6 +443,7 @@ Shortest transaction:           0.01
 ```
 
 * 서킷 브레이킹 확인 (kiali 화면)
+![cb](https://user-images.githubusercontent.com/61722732/89416771-b915b680-d768-11ea-9560-b242e617c245.PNG)
 
 
 * 서킷 브레이킹을 위한 DestinationRule 제거
