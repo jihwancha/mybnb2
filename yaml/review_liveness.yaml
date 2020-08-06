@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: review_liveness
+  labels:
+    app: review_liveness
+spec:
+  containers:
+  - name: review_liveness
+    image: 496278789073.dkr.ecr.ap-northeast-2.amazonaws.com/skccuser22-review:latest
+    imagePullPolicy: Always
+    livenessProbe:
+      httpGet:
+        path: '/actuator/health_fail'
+        port: 8080
+      initialDelaySeconds: 20
+      timeoutSeconds: 2
+      periodSeconds: 5
+      failureThreshold: 5
