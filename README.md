@@ -626,66 +626,65 @@ Longest transaction:            0.72
 Shortest transaction:           0.00
 ```
 
-* ConfigMap 확인
-   - mybnb-config 정보
-   ```
-   $ kubectl describe cm mybnb-config -n mybnb
-   Name:         mybnb-config
-   Namespace:    mybnb
-   Labels:       <none>
-   Annotations:
-   Data
-   ====
-   alarm.prefix:
-   ----
-   Hello
-   api.url.auth:
-   ----
-   http://auth:8080
-   api.url.payment:
-   ----
-   http://pay:8080
-   Events:  <none>
-   ```
+* ConfigMap 배포 확인
+```
+$ kubectl describe cm mybnb-config -n mybnb
+Name:         mybnb-config
+Namespace:    mybnb
+Labels:       <none>
+Annotations:
+Data
+====
+alarm.prefix:
+----
+Hello
+api.url.auth:               <==================
+----
+http://auth:8080
+api.url.payment:
+----
+http://pay:8080
+Events:  <none>
+```
 
-   - mybnb-config의 api.url.auth 사용
-   ```
-   $ kubectl describe pod room-6448f765fc-jsbgr -n mybnb
-   Name:           room-6448f765fc-jsbgr
-   Namespace:      mybnb
-   Priority:       0
-   Node:           ip-192-168-31-164.ap-northeast-2.compute.internal/192.168.31.164
-   Start Time:     Wed, 05 Aug 2020 20:15:12 +0900
-   Labels:         app=room
-                   pod-template-hash=6448f765fc
-                   security.istio.io/tlsMode=istio
-   Annotations:    kubernetes.io/psp: eks.privileged
-                   sidecar.istio.io/status:
-                     {"version":"805d5a8f492b8fa20c7d92aac6e0cda9fe0f1fe63e5073b929d39ea721788f25","initContainers":["istio-init"],"containers":["istio-proxy"]...
-   Status:         Running
-   IP:             192.168.9.76
-   IPs:            <none>
-   Controlled By:  ReplicaSet/room-6448f765fc
+* ConfigMap 사용 확인
+```
+$ kubectl describe pod room-6448f765fc-jsbgr -n mybnb
+Name:           room-6448f765fc-jsbgr
+Namespace:      mybnb
+Priority:       0
+Node:           ip-192-168-31-164.ap-northeast-2.compute.internal/192.168.31.164
+Start Time:     Wed, 05 Aug 2020 20:15:12 +0900
+Labels:         app=room
+                pod-template-hash=6448f765fc
+                security.istio.io/tlsMode=istio
+Annotations:    kubernetes.io/psp: eks.privileged
+                sidecar.istio.io/status:
+                  {"version":"805d5a8f492b8fa20c7d92aac6e0cda9fe0f1fe63e5073b929d39ea721788f25","initContainers":["istio-init"],"containers":["istio-proxy"]...
+Status:         Running
+IP:             192.168.9.76
+IPs:            <none>
+Controlled By:  ReplicaSet/room-6448f765fc
 
-   Containers:
-     room:
-       Container ID:   docker://e4ebf43b540db407cafb78ea2d51a7e38eb65c568d5cbbe10ebf1fee2863c038
-       Image:          496278789073.dkr.ecr.ap-northeast-2.amazonaws.com/skccuser22-room:latest
-       Image ID:       docker-pullable://496278789073.dkr.ecr.ap-northeast-2.amazonaws.com/skccuser22-room@sha256:27ea1073553235b5786a032e7603eb2735afd8f5fdb68cf81ca0bd0de8b4984e
-       Port:           8080/TCP
-       Host Port:      0/TCP
-       State:          Running
-         Started:      Wed, 05 Aug 2020 20:15:16 +0900
-       Ready:          True
-       Restart Count:  0
-       Liveness:       http-get http://:8080/actuator/health delay=120s timeout=2s period=5s #success=1 #failure=5
-       Readiness:      http-get http://:8080/actuator/health delay=10s timeout=2s period=5s #success=1 #failure=10
-       Environment:
-         api.url.auth:  <set to the key 'api.url.auth' of config map 'mybnb-config'>  Optional: false
-       Mounts:
-         /var/run/secrets/kubernetes.io/serviceaccount from default-token-l4j2t (ro)
+Containers:
+  room:
+    Container ID:   docker://e4ebf43b540db407cafb78ea2d51a7e38eb65c568d5cbbe10ebf1fee2863c038
+    Image:          496278789073.dkr.ecr.ap-northeast-2.amazonaws.com/skccuser22-room:latest
+    Image ID:       docker-pullable://496278789073.dkr.ecr.ap-northeast-2.amazonaws.com/skccuser22-room@sha256:27ea1073553235b5786a032e7603eb2735afd8f5fdb68cf81ca0bd0de8b4984e
+    Port:           8080/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Wed, 05 Aug 2020 20:15:16 +0900
+    Ready:          True
+    Restart Count:  0
+    Liveness:       http-get http://:8080/actuator/health delay=120s timeout=2s period=5s #success=1 #failure=5
+    Readiness:      http-get http://:8080/actuator/health delay=10s timeout=2s period=5s #success=1 #failure=10
+    Environment:
+      api.url.auth:  <set to the key 'api.url.auth' of config map 'mybnb-config'>  Optional: false                            <==================
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-l4j2t (ro)
 
-   ...
+...
 
-   ```
+```
 
