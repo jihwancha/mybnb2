@@ -626,6 +626,8 @@ Longest transaction:            0.72
 Shortest transaction:           0.00
 ```
 
+# 검증6) ConfigMap
+
 * ConfigMap 배포 확인
 ```
 $ kubectl describe cm mybnb-config -n mybnb
@@ -686,5 +688,50 @@ Containers:
 
 ...
 
+```
+
+# 검증7) Liveness
+
+* Liveness 설정
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: review-liveness
+  namespace: mybnb
+  labels:
+    app: review-liveness
+spec:
+  containers:
+  - name: review-liveness
+    image: 496278789073.dkr.ecr.ap-northeast-2.amazonaws.com/skccuser22-review:latest
+    imagePullPolicy: Always
+    livenessProbe:
+      httpGet:
+        path: '/actuator/health_fail'               <========= 잘못된 주소
+        port: 8080
+      initialDelaySeconds: 20
+      timeoutSeconds: 2
+      periodSeconds: 5
+      failureThreshold: 5                           <========= 5회까지
+~                                
+```
+
+* POD 상태
+```
+NAME                       READY   STATUS             RESTARTS   AGE
+alarm-77cd9d57-96r4k       2/2     Running            0          11h
+auth-5d4c8cd986-7v4v8      2/2     Running            0          12h
+auth-5d4c8cd986-9vtht      2/2     Running            0          11h
+auth-5d4c8cd986-lmdp2      2/2     Running            0          11h
+booking-7ffd5f9d75-lwhq8   2/2     Running            0          13h
+gateway-7885fb4994-whvw8   2/2     Running            0          13h
+html-6fbc78fb49-t7dd8      2/2     Running            0          13h
+mypage-595b95dbf5-x5xgt    2/2     Running            0          13h
+pay-6ddbb7d4dd-c847f       2/2     Running            0          13h
+review-7cfb746cbb-ttv8s    2/2     Running            0          11h
+review-liveness            1/2     CrashLoopBackOff   5          4m42s          <=====================
+room-6448f765fc-jsbgr      2/2     Running            0          13h
+siege                      2/2     Running            0          13h
 ```
 
